@@ -1,0 +1,32 @@
+version: '3'
+services:
+
+    kafka-zookeeper:
+      image: zookeeper:3.6.2
+      hostname: kafka-zookeeper
+      ports:
+        - 2181:2181
+      networks:
+        - kafka
+
+    kafka-instance-1:
+      image: confluentinc/cp-kafka:5.5.3
+      hostname: kafka-instance-1
+      environment:
+        KAFKA_BROKER_ID: 1 
+        KAFKA_ZOOKEEPER_CONNECT: "kafka-zookeeper:2181" #Zookeeper Bağlantı bilgileri, zorunlu olarak kullanılmalı
+        KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka-instance-1:19092,LISTENER_DOCKER_EXTERNAL://localhost:9092 #
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+        KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 #Cluster kurulumlarda, topic' in kaç tane replication' da tutulacağını belirtir.
+      ports:
+        - 9092:9092
+      #volumes:
+        #- ./{PATH}/data:/var/lib/kafka/data # Kafka mesajlarının yazılacağı yer için path belirleyebiliriz.
+      depends_on:
+        - kafka-zookeeper
+      networks:
+        - kafka
+
+networks:
+  kafka:
